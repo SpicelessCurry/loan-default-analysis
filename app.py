@@ -178,7 +178,7 @@ def api_dataset_upload():
         if file.filename == '':
             return jsonify({'success': False, 'message': 'No selected file'})
             
-        if not file.filename.endswith(('.joblib', '.pth')):
+        if not file.filename.lower().endswith('.csv'):
             return jsonify({'success': False, 'message': 'Invalid file extension. Must be .csv'})
             
         filename = secure_filename(file.filename)
