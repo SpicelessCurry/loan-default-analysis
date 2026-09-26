@@ -192,9 +192,8 @@ class RiskAnalyzer:
 
     def generate_llm_assessment(self, applicant_data, predictions, risk_factors, risk_level, api_key):
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
             
             prompt = f"""
             Act as a Senior Credit Risk Analyst. Please write a professional credit risk assessment report based on the following data.
@@ -220,8 +219,11 @@ class RiskAnalyzer:
             Use professional financial terminology and keep formatting clean (Markdown).
             """
             
-            response = model.generate_content(prompt)
-            return response.text
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
         except Exception as e:
             print(f"LLM Generation failed: {e}")
             return self.generate_rule_based_assessment(applicant_data, predictions, risk_factors, risk_level)

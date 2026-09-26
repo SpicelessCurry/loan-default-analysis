@@ -11,7 +11,7 @@ A web-based chatbot application for assessing loan default risk using deep learn
   - Default probability from all selected models
   - Color-coded risk level (Low / Moderate / High / Very High)
   - Detailed risk factor analysis across 11 categories
-  - AI-generated risk assessment report (via Google Gemini or rule-based fallback)
+  - AI-generated risk assessment report (via OpenAI (GPT-4o) or rule-based fallback)
   - Full applicant data view
 - **Dark Theme UI** — Modern, responsive dashboard with real-time interactions
 
@@ -44,7 +44,7 @@ cp .env.example .env
 | `SECRET_KEY` | `creditscope-secret-key-change-me` | Flask session secret key |
 | `ADMIN_USERNAME` | `admin` | Login username |
 | `ADMIN_PASSWORD` | `admin123` | Login password |
-| `GEMINI_API_KEY` | *(empty)* | Google Gemini API key for AI-powered assessments |
+| `OPENAI_API_KEY` | *(empty)* | OpenAI (GPT-4o) API key for AI-powered assessments |
 
 ### 3. Run the Application
 
@@ -134,7 +134,7 @@ CreditScope/
 
 ## 🤖 AI-Powered Assessments
 
-When a `GEMINI_API_KEY` is configured in `.env`, the chatbot uses Google Gemini to generate professional risk assessment reports. Without it, a comprehensive rule-based assessment engine provides detailed analysis covering:
+When a `OPENAI_API_KEY` is configured in `.env`, the chatbot uses OpenAI (GPT-4o) to generate professional risk assessment reports. Without it, a comprehensive rule-based assessment engine provides detailed analysis covering:
 
 - Overall risk level with recommendations
 - Model prediction summaries

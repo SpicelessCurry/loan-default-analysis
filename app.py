@@ -346,7 +346,7 @@ def api_chat():
             risk_level = risk_analyzer.get_risk_level(avg_probability)
             assessment_text = risk_analyzer.generate_assessment(
                 clean_dict, predictions, risk_factors, risk_level,
-                api_key=Config.GEMINI_API_KEY
+                api_key=Config.OPENAI_API_KEY
             )
             
             return jsonify({
@@ -362,11 +362,10 @@ def api_chat():
             
         else:
             # Info or general queries - use Gemini if available for conversational AI
-            if Config.GEMINI_API_KEY:
-                import google.generativeai as genai
+            if Config.OPENAI_API_KEY:
+                from openai import OpenAI
                 try:
-                    genai.configure(api_key=Config.GEMINI_API_KEY)
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    client = OpenAI(api_key=Config.OPENAI_API_KEY)
                     
                     models = model_manager.get_models()
                     active = sum(1 for m in models if m.get('is_selected', False))
@@ -381,8 +380,14 @@ def api_chat():
                         "Answer the user's questions clearly, concisely, and conversationally."
                     )
                     
-                    gemini_response = model.generate_content([system_prompt, f"User: {message}"])
-                    response = gemini_response.text
+                    completion = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": message}
+                        ]
+                    )
+                    response = completion.choices[0].message.content
                 except Exception as e:
                     response = f"I encountered an error connecting to my AI brain. (Error: {str(e)})"
             else:
