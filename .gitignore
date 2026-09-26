@@ -1,0 +1,18 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+
+# Uploads (user data)
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditScope - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #0a0a1a;
+            --bg-end: #1a1a2e;
+            --card-bg: #1e1e2e;
+            --input-bg: #2a2a3e;
+            --border-color: #3a3a4e;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --primary-start: #3b82f6;
+            --primary-end: #2563eb;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        /* Floating particles effect */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.2);
+            animation: float 15s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(100px); opacity: 0; }
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            height: 48px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 0 40px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-start);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+        
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        button.submit-btn {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(to right, var(--primary-start), var(--primary-end));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        button.submit-btn:hover {
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+
+        button.submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        .error-message {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background particles -->
+    <script>
+        for (let i = 0; i < 15; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 20 + 10;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            document.body.appendChild(particle);
+        }
+    </script>
+
+    <div class="login-card">
+        <div class="header">
+            <div class="logo">🛡️</div>
+            <h1>CreditScope</h1>
+            <div class="subtitle">Credit Risk Assessment Platform</div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Invalid username or password.
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Password visibility toggle
+            togglePassword.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+            });
+
+            // Form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = loginForm.username.value;
+                const password = loginForm.password.value;
+                
+                errorMessage.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Signing in...';
+
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        errorMessage.textContent = data.message || 'Invalid username or password.';
+                        errorMessage.style.display = 'block';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Sign In';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    errorMessage.textContent = 'A network error occurred. Please try again.';
+                    errorMessage.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign In';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
