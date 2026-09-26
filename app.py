@@ -194,16 +194,21 @@ def api_dataset_upload():
         current_dataset['filename'] = filename
         current_dataset['uploaded_at'] = pd.Timestamp.now().isoformat()
         
-        return jsonify({
+        
+        resp = {
             'success': True,
             'info': {
                 'filename': filename,
                 'rows': len(df),
-                'columns': df.columns.tolist()
+                'columns': df.columns.tolist()[:5] # just a few to avoid huge json
             },
             'message': 'Dataset uploaded successfully'
-        })
+        }
+        print("DEBUG UPLOAD SUCCESS:", resp)
+        return jsonify(resp)
     except Exception as e:
+        import traceback
+        print("DEBUG UPLOAD ERROR:", traceback.format_exc())
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/dataset/info', methods=['GET'])
