@@ -127,18 +127,19 @@ def api_models_upload():
         file = request.files['file']
         metadata_file = request.files.get('metadata_file')
         model_type = request.form.get('model_type')
+        preprocessor_file = request.files.get('preprocessor_file')
         model_name = request.form.get('model_name')
         
         if file.filename == '':
             return jsonify({'success': False, 'message': 'No selected file'})
             
-        if not model_type or model_type not in ['RNN', 'ANN', 'MLP']:
+        if not model_type or model_type not in ['MLP', 'DCN']:
             return jsonify({'success': False, 'message': 'Invalid model type. Must be RNN, ANN, or MLP'})
             
-        if not file.filename.endswith(('.h5', '.keras', '.joblib')):
+        if not file.filename.endswith(('.joblib', '.pth')):
             return jsonify({'success': False, 'message': 'Invalid file extension. Must be .h5, .keras, or .joblib'})
             
-        result = model_manager.upload_model(file, model_type, model_name, metadata_file)
+        result = model_manager.upload_model(file, model_type, model_name, metadata_file, preprocessor_file)
         return jsonify({'success': True, 'model': result, 'message': 'Model uploaded successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -177,7 +178,7 @@ def api_dataset_upload():
         if file.filename == '':
             return jsonify({'success': False, 'message': 'No selected file'})
             
-        if not file.filename.endswith('.csv'):
+        if not file.filename.endswith(('.joblib', '.pth')):
             return jsonify({'success': False, 'message': 'Invalid file extension. Must be .csv'})
             
         filename = secure_filename(file.filename)

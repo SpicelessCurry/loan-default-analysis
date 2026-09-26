@@ -1,4 +1,8 @@
+import json
+import re
 
+# --- 1. Rewrite ml_engine.py ---
+ml_engine_code = '''
 import os
 import uuid
 import json
@@ -214,3 +218,170 @@ class ModelManager:
                 })
         
         return results
+'''
+with open('ml_engine.py', 'w', encoding='utf-8') as f:
+    f.write(ml_engine_code)
+
+
+# --- 2. Patch config.py ---
+with open('config.py', 'r', encoding='utf-8') as f:
+    config = f.read()
+
+config = re.sub(
+    r"ALLOWED_MODEL_EXTENSIONS = \{.*?\}",
+    "ALLOWED_MODEL_EXTENSIONS = {'.joblib', '.pth'}",
+    config
+)
+with open('config.py', 'w', encoding='utf-8') as f:
+    f.write(config)
+
+
+# --- 3. Patch app.py ---
+with open('app.py', 'r', encoding='utf-8') as f:
+    app_code = f.read()
+
+app_code = app_code.replace(
+    "model_type = request.form.get('model_type')",
+    "model_type = request.form.get('model_type')\n        preprocessor_file = request.files.get('preprocessor_file')"
+)
+
+app_code = re.sub(
+    r"if not model_type or model_type not in \[.*?\]:",
+    "if not model_type or model_type not in ['MLP', 'DCN']:",
+    app_code
+)
+
+app_code = re.sub(
+    r"Invalid model type\. Must be .*?\"",
+    "Invalid model type. Must be MLP or DCN\"",
+    app_code
+)
+
+app_code = re.sub(
+    r"if not file\.filename\.endswith\(.*?\):",
+    "if not file.filename.endswith(('.joblib', '.pth')):",
+    app_code
+)
+
+app_code = re.sub(
+    r"Invalid file extension\. Must be .*?\"",
+    "Invalid file extension. Must be .joblib or .pth\"",
+    app_code
+)
+
+app_code = app_code.replace(
+    "result = model_manager.upload_model(file, model_type, model_name, metadata_file)",
+    "result = model_manager.upload_model(file, model_type, model_name, metadata_file, preprocessor_file)"
+)
+
+with open('app.py', 'w', encoding='utf-8') as f:
+    f.write(app_code)
+
+
+# --- 4. Patch dashboard.html ---
+with open('templates/dashboard.html', 'r', encoding='utf-8') as f:
+    html = f.read()
+
+# Replace select options
+html = re.sub(
+    r'<select class="input" id="model-type" required onchange="handleModelTypeChange\(\)">.*?</select>',
+    '''<select class="input" id="model-type" required onchange="handleModelTypeChange()">
+                            <option value="">Select Type</option>
+                            <option value="MLP">MLP</option>
+                            <option value="DCN">DCN</option>
+                        </select>''',
+    html, flags=re.DOTALL
+)
+
+# Add preprocessor group directly after metadata group
+preprocessor_group = '''
+                    <div class="form-group" id="preprocessor-group" style="display: none; margin-bottom: 16px;">
+                        <label style="font-size: 14px; margin-bottom: 8px; display: block;">Preprocessor (Required for DCN .joblib)</label>
+                        <div class="drop-zone" id="preprocessor-drop-zone" onclick="document.getElementById('preprocessor-file').click()" style="min-height: 80px; padding: 15px;">
+                            <span style="font-size: 20px;">??</span>
+                            <p>Drop preprocessor.joblib here or click</p>
+                            <input type="file" id="preprocessor-file" accept=".joblib" style="display: none;">
+                        </div>
+                        <div id="preprocessor-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>
+                    </div>'''
+
+if 'id="preprocessor-group"' not in html:
+    html = html.replace(
+        '<div id="metadata-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>\n                    </div>',
+        '<div id="metadata-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>\n                    </div>' + preprocessor_group
+    )
+
+# Fix handleModelTypeChange
+js_target = '''function handleModelTypeChange() {
+            const type = document.getElementById('model-type').value;
+            const metaGroup = document.getElementById('metadata-group');
+            const modelFile = document.getElementById('model-file');
+            
+            if (type === 'MLP') {
+                metaGroup.style.display = 'block';
+                modelFile.accept = '.joblib,.pkl';
+                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .joblib file here, or click to browse';
+            } else {
+                metaGroup.style.display = 'none';
+                modelFile.accept = '.h5,.keras';
+                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .h5 or .keras file here, or click to browse';
+            }
+        }'''
+
+js_new = '''function handleModelTypeChange() {
+            const type = document.getElementById('model-type').value;
+            const metaGroup = document.getElementById('metadata-group');
+            const prepGroup = document.getElementById('preprocessor-group');
+            const modelFile = document.getElementById('model-file');
+            const dropText = document.getElementById('model-drop-zone').querySelector('p');
+            
+            if (type === 'MLP') {
+                metaGroup.style.display = 'block';
+                if(prepGroup) prepGroup.style.display = 'none';
+                modelFile.accept = '.joblib,.pkl';
+                dropText.textContent = 'Drag and drop .joblib model here, or click to browse';
+            } else if (type === 'DCN') {
+                metaGroup.style.display = 'none';
+                if(prepGroup) prepGroup.style.display = 'block';
+                modelFile.accept = '.pth';
+                dropText.textContent = 'Drag and drop .pth PyTorch weights here, or click to browse';
+            } else {
+                metaGroup.style.display = 'none';
+                if(prepGroup) prepGroup.style.display = 'none';
+                modelFile.accept = '';
+                dropText.textContent = 'Please select a model type first';
+            }
+        }'''
+html = html.replace(js_target, js_new)
+
+# Fix uploadModel append logic
+append_target = '''if (type === 'MLP') {
+                const metadataFile = document.getElementById('metadata-file').files[0];
+                if (metadataFile) {
+                    formData.append('metadata_file', metadataFile);
+                }
+            }'''
+append_new = '''if (type === 'MLP') {
+                const metadataFile = document.getElementById('metadata-file').files[0];
+                if (metadataFile) {
+                    formData.append('metadata_file', metadataFile);
+                }
+            } else if (type === 'DCN') {
+                const preprocessorFile = document.getElementById('preprocessor-file').files[0];
+                if (preprocessorFile) {
+                    formData.append('preprocessor_file', preprocessorFile);
+                }
+            }'''
+html = html.replace(append_target, append_new)
+
+# Fix drag drop setup
+if "setupDragDrop('preprocessor-drop-zone'" not in html:
+    html = html.replace(
+        "setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');",
+        "setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');\n            setupDragDrop('preprocessor-drop-zone', 'preprocessor-file', 'preprocessor-file-name');"
+    )
+
+with open('templates/dashboard.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print("All files patched!")

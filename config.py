@@ -12,7 +12,7 @@ class Config:
     DATASETS_UPLOAD_FOLDER = 'uploads/datasets'
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500MB
-    ALLOWED_MODEL_EXTENSIONS = {'.h5', '.keras', '.joblib'}
+    ALLOWED_MODEL_EXTENSIONS = {'.joblib', '.pth'}
     ALLOWED_DATASET_EXTENSIONS = {'.csv'}
 
 # Helper to provide direct access if needed

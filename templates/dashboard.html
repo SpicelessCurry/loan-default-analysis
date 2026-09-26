@@ -418,9 +418,7 @@
                         <select class="input" id="model-type" required onchange="handleModelTypeChange()">
                             <option value="">Select Type</option>
                             <option value="MLP">MLP</option>
-                            <option value="ANN">ANN</option>
-                            <option value="RNN">RNN</option>
-                            <option value="LightGBM">LightGBM</option>
+                            <option value="DCN">DCN</option>
                         </select>
                     </div>
                     
@@ -432,6 +430,15 @@
                             <input type="file" id="metadata-file" accept=".json" style="display: none;">
                         </div>
                         <div id="metadata-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>
+                    </div>
+                    <div class="form-group" id="preprocessor-group" style="display: none; margin-bottom: 16px;">
+                        <label style="font-size: 14px; margin-bottom: 8px; display: block;">Preprocessor (Required for DCN .joblib)</label>
+                        <div class="drop-zone" id="preprocessor-drop-zone" onclick="document.getElementById('preprocessor-file').click()" style="min-height: 80px; padding: 15px;">
+                            <span style="font-size: 20px;">??</span>
+                            <p>Drop preprocessor.joblib here or click</p>
+                            <input type="file" id="preprocessor-file" accept=".joblib" style="display: none;">
+                        </div>
+                        <div id="preprocessor-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>
                     </div>
                     
                     <div class="drop-zone" id="model-drop-zone">
@@ -606,16 +613,25 @@
         function handleModelTypeChange() {
             const type = document.getElementById('model-type').value;
             const metaGroup = document.getElementById('metadata-group');
+            const prepGroup = document.getElementById('preprocessor-group');
             const modelFile = document.getElementById('model-file');
+            const dropText = document.getElementById('model-drop-zone').querySelector('p');
             
             if (type === 'MLP') {
                 metaGroup.style.display = 'block';
+                if(prepGroup) prepGroup.style.display = 'none';
                 modelFile.accept = '.joblib,.pkl';
-                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .joblib file here, or click to browse';
+                dropText.textContent = 'Drag and drop .joblib model here, or click to browse';
+            } else if (type === 'DCN') {
+                metaGroup.style.display = 'none';
+                if(prepGroup) prepGroup.style.display = 'block';
+                modelFile.accept = '.pth';
+                dropText.textContent = 'Drag and drop .pth PyTorch weights here, or click to browse';
             } else {
                 metaGroup.style.display = 'none';
-                modelFile.accept = '.h5,.keras';
-                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .h5 or .keras file here, or click to browse';
+                if(prepGroup) prepGroup.style.display = 'none';
+                modelFile.accept = '';
+                dropText.textContent = 'Please select a model type first';
             }
         }
 
@@ -687,6 +703,11 @@
                 const metadataFile = document.getElementById('metadata-file').files[0];
                 if (metadataFile) {
                     formData.append('metadata_file', metadataFile);
+                }
+            } else if (type === 'DCN') {
+                const preprocessorFile = document.getElementById('preprocessor-file').files[0];
+                if (preprocessorFile) {
+                    formData.append('preprocessor_file', preprocessorFile);
                 }
             }
             const metadataFile = document.getElementById('metadata-file').files[0];
@@ -1028,7 +1049,9 @@
             renderMessages();
             setupDragDrop('model-drop-zone', 'model-file', 'model-file-name');
             setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');
+            setupDragDrop('preprocessor-drop-zone', 'preprocessor-file', 'preprocessor-file-name');
             setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');
+            setupDragDrop('preprocessor-drop-zone', 'preprocessor-file', 'preprocessor-file-name');
             setupDragDrop('dataset-drop-zone', 'dataset-file', 'dataset-file-name');
             loadModels();
             loadDatasetInfo();
