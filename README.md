@@ -1,11 +1,11 @@
 # 🛡️ CreditScope — Credit Risk Assessment Platform
 
-A web-based chatbot application for assessing loan default risk using deep learning models (RNN, ANN, MLP). Admins can upload trained Keras models and applicant datasets, then use an intelligent chatbot to look up individual applicants and receive AI-powered risk assessments.
+A web-based chatbot application for assessing loan default risk using machine learning models (Scikit-Learn MLP and PyTorch DCN). Admins can upload trained models and applicant datasets, then use an intelligent chatbot to look up individual applicants and receive AI-powered risk assessments.
 
 ## ✨ Features
 
 - **Admin Authentication** — Secure login with configurable credentials
-- **Model Management** — Upload, select, and manage multiple Keras models (RNN, ANN, MLP)
+- **Model Management** — Upload, select, and manage models (Scikit-Learn MLP pipelines and PyTorch DCN weights)
 - **Dataset Upload** — Import applicant datasets (CSV) with automatic validation
 - **Risk Assessment Chatbot** — Enter an applicant ID to get:
   - Default probability from all selected models
@@ -104,7 +104,7 @@ The dataset should contain `SK_ID_CURR` (applicant ID) plus 107 feature columns.
 CreditScope/
 ├── app.py                 # Main Flask application with all routes
 ├── config.py              # Configuration (env vars, paths, limits)
-├── ml_engine.py           # ModelManager — load, predict, manage Keras models
+├── ml_engine.py           # ModelManager — load, predict, manage MLP and PyTorch DCN models
 ├── risk_analyzer.py       # RiskAnalyzer — rule-based + LLM risk assessment
 ├── requirements.txt       # Python dependencies
 ├── .env.example           # Environment variable template
