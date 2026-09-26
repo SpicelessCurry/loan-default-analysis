@@ -125,6 +125,7 @@ def api_models_upload():
             return jsonify({'success': False, 'message': 'No file part'})
         
         file = request.files['file']
+        metadata_file = request.files.get('metadata_file')
         model_type = request.form.get('model_type')
         model_name = request.form.get('model_name')
         
@@ -134,10 +135,10 @@ def api_models_upload():
         if not model_type or model_type not in ['RNN', 'ANN', 'MLP']:
             return jsonify({'success': False, 'message': 'Invalid model type. Must be RNN, ANN, or MLP'})
             
-        if not file.filename.endswith(('.h5', '.keras')):
-            return jsonify({'success': False, 'message': 'Invalid file extension. Must be .h5 or .keras'})
+        if not file.filename.endswith(('.h5', '.keras', '.joblib')):
+            return jsonify({'success': False, 'message': 'Invalid file extension. Must be .h5, .keras, or .joblib'})
             
-        result = model_manager.upload_model(file, model_type, model_name)
+        result = model_manager.upload_model(file, model_type, model_name, metadata_file)
         return jsonify({'success': True, 'model': result, 'message': 'Model uploaded successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -172,6 +173,7 @@ def api_dataset_upload():
             return jsonify({'success': False, 'message': 'No file part'})
             
         file = request.files['file']
+        metadata_file = request.files.get('metadata_file')
         if file.filename == '':
             return jsonify({'success': False, 'message': 'No selected file'})
             
@@ -275,13 +277,7 @@ def api_predict():
         # Extract features
         features_df = row.drop(columns=['SK_ID_CURR'])
         
-        # Convert to numeric, coerce errors, fill NaN with 0
-        features_numeric = features_df.apply(pd.to_numeric, errors='coerce').fillna(0)
-        
-        # Convert to numpy array
-        features_array = features_numeric.to_numpy()
-        
-        predictions = model_manager.predict_all_selected(features_array)
+        predictions = model_manager.predict_all_selected(features_df)
         
         return jsonify({'success': True, 'predictions': predictions})
     except Exception as e:
@@ -329,10 +325,7 @@ def api_chat():
                 
             # Extract features and predict
             features_df = row.drop(columns=['SK_ID_CURR'])
-            features_numeric = features_df.apply(pd.to_numeric, errors='coerce').fillna(0)
-            features_array = features_numeric.to_numpy()
-            
-            predictions = model_manager.predict_all_selected(features_array)
+            predictions = model_manager.predict_all_selected(features_df)
             
             if not predictions:
                 return jsonify({

@@ -415,13 +415,23 @@
                 <form id="model-upload-form" style="margin-top: 16px;">
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                         <input type="text" class="input" id="model-name" placeholder="Model Name (e.g. Primary MLP)" required>
-                        <select class="input" id="model-type" required>
+                        <select class="input" id="model-type" required onchange="handleModelTypeChange()">
                             <option value="">Select Type</option>
                             <option value="MLP">MLP</option>
                             <option value="ANN">ANN</option>
                             <option value="RNN">RNN</option>
                             <option value="LightGBM">LightGBM</option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group" id="metadata-group" style="display: none; margin-bottom: 16px;">
+                        <label style="font-size: 14px; margin-bottom: 8px; display: block;">Metadata JSON (Required for MLP .joblib)</label>
+                        <div class="drop-zone" id="metadata-drop-zone" onclick="document.getElementById('metadata-file').click()" style="min-height: 80px; padding: 15px;">
+                            <span style="font-size: 20px;">??</span>
+                            <p>Drop metadata.json here or click</p>
+                            <input type="file" id="metadata-file" accept=".json" style="display: none;">
+                        </div>
+                        <div id="metadata-file-name" style="margin-top: 8px; font-size: 14px; color: var(--accent);"></div>
                     </div>
                     
                     <div class="drop-zone" id="model-drop-zone">
@@ -593,6 +603,22 @@
         }
 
         // --- Models API ---
+        function handleModelTypeChange() {
+            const type = document.getElementById('model-type').value;
+            const metaGroup = document.getElementById('metadata-group');
+            const modelFile = document.getElementById('model-file');
+            
+            if (type === 'MLP') {
+                metaGroup.style.display = 'block';
+                modelFile.accept = '.joblib,.pkl';
+                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .joblib file here, or click to browse';
+            } else {
+                metaGroup.style.display = 'none';
+                modelFile.accept = '.h5,.keras';
+                document.getElementById('model-drop-zone').querySelector('p').textContent = 'Drag and drop .h5 or .keras file here, or click to browse';
+            }
+        }
+
         async function loadModels() {
             const container = document.getElementById('model-list-container');
             try {
@@ -656,17 +682,28 @@
             formData.append('model_name', name);
             formData.append('model_type', type);
             formData.append('file', fileInput.files[0]);
+            
+            if (type === 'MLP') {
+                const metadataFile = document.getElementById('metadata-file').files[0];
+                if (metadataFile) {
+                    formData.append('metadata_file', metadataFile);
+                }
+            }
+            const metadataFile = document.getElementById('metadata-file').files[0];
+            if (metadataFile) {
+                formData.append('metadata_file', metadataFile);
+            }
 
             try {
                 const res = await fetch('/api/models/upload', { method: 'POST', body: formData });
-                if (res.ok) {
+                const data = await res.json().catch(()=>({}));
+                if (res.ok && data.success !== false) {
                     showToast('Model uploaded successfully');
                     document.getElementById('model-upload-form').reset();
                     document.getElementById('model-file-name').textContent = '';
                     loadModels();
                 } else {
-                    const data = await res.json().catch(()=>({}));
-                    showToast(data.error || 'Upload failed', 'error');
+                    showToast(data.message || data.error || 'Upload failed', 'error');
                 }
             } catch (e) {
                 showToast('Network error during upload', 'error');
@@ -746,14 +783,14 @@
             try {
                 showToast('Uploading and parsing dataset (this may take a moment)...');
                 const res = await fetch('/api/dataset/upload', { method: 'POST', body: formData });
-                if (res.ok) {
+                const data = await res.json().catch(()=>({}));
+                if (res.ok && data.success !== false) {
                     showToast('Dataset uploaded and cached successfully');
                     document.getElementById('dataset-file-name').textContent = '';
                     fileInput.value = '';
                     loadDatasetInfo();
                 } else {
-                    const data = await res.json().catch(()=>({}));
-                    showToast(data.error || 'Upload failed', 'error');
+                    showToast(data.message || data.error || 'Upload failed', 'error');
                 }
             } catch (e) {
                 showToast('Network error during upload', 'error');
@@ -981,8 +1018,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('model-file').addEventListener('change', function(e) {
+                if(this.files[0] && this.files[0].name.endsWith('.joblib')) {
+                    document.getElementById('metadata-group').style.display = 'block';
+                } else {
+                    document.getElementById('metadata-group').style.display = 'none';
+                }
+            });
             renderMessages();
             setupDragDrop('model-drop-zone', 'model-file', 'model-file-name');
+            setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');
+            setupDragDrop('metadata-drop-zone', 'metadata-file', 'metadata-file-name');
             setupDragDrop('dataset-drop-zone', 'dataset-file', 'dataset-file-name');
             loadModels();
             loadDatasetInfo();
